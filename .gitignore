@@ -1,0 +1,6 @@
+# created by virtualenv automatically
+bin
+liblib64
+logs
+pyvenv.cfg
+sync-sourcecode.sh
