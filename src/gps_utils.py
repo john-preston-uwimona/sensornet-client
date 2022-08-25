@@ -11,18 +11,18 @@ import serial.tools.list_ports
 
 class GpsReader(threading.Thread):
 
-    def __init__(self, config):
-        threading.Thread.__init__(self)
+    def __init__(self, name=None, config={}):
+        threading.Thread.__init__(self, name=name)
         self.current_value = None
         self.current_gpgga = None
         self.running = True
         self.fixed_location = False
         self.config = config
-        try:
-            if config["fixed_location"] == "true":
-                self.fixed_location = True
-                self.current_value = config["fixed_location_value"]
-            else:
+        if config["fixed_location"] == "true":
+            self.fixed_location = True
+            self.current_value = config["fixed_location_value"]
+        else:
+            try:
                 self.ser = serial.Serial(
                     self.get_port(config["device_parameters"]["location"], config["device_parameters"]["port"]),
                     baudrate=config["device_parameters"]["baudrate"],
@@ -32,8 +32,8 @@ class GpsReader(threading.Thread):
                     timeout=None,
                     xonxoff=True if config["device_parameters"]["xonxoff"] == "true" else False)
                 self.ser.flushInput()
-        except ConnectionRefusedError as e:
-            print(e)
+            except ConnectionRefusedError as e:
+                print(e)
 
     def get_port(self, location, default_port):
         ports = serial.tools.list_ports.comports()
@@ -76,8 +76,8 @@ class GpsReader(threading.Thread):
             else:
                 try:
                     ser_bytes = self.ser.readline()
-                    # print("+++++", str(ser_bytes.decode()))
-                    # print("-----", str(ser_bytes.decode()).split(","))
+                    print("+++++", str(ser_bytes))
+                    print("-----", str(ser_bytes.decode()).split(","))
                     values = (str(ser_bytes.decode()).split(","))
                     # values = "$GPGGA,200053.000,1800.1861,N,07645.6552,W,2,05,2.2,174.2,M,-23.7,M,2.0,0000".split(",")
                     if values[0] == "$GPGGA":
@@ -148,7 +148,7 @@ def get_gps_report(gpsp):
 
 def get_gps(gpsp):
     report = gpsp.get_current_value()
-    print("@@@@@@ GPS REPORT @@@@@@", report)
+    shared_objects.log.info("GPS report {}".format(report))
     # print("@@@@@@ CACHE(lon) REPORT @@@@@@", shared_objects.get_cache("lon"))
     # print("@@@@@@ CACHE(lat) REPORT @@@@@@", shared_objects.get_cache("lat"))
     # print("@@@@@@ CACHE(alt) REPORT @@@@@@", shared_objects.get_cache("alt"))

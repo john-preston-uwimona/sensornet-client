@@ -3,9 +3,10 @@ import tracemalloc
 import shared_objects
 import os
 import json
-import client_api
 import gps_utils
 import modem_utils
+import system_utils
+import humanize
 
 
 tasks = {}
@@ -15,8 +16,8 @@ task = lambda f: tasks.setdefault(f.__name__, f)
 def system_info_object():
     current, peak = tracemalloc.get_traced_memory()
     return {
-        "current_memory": current,
-        "peak_memory": peak,
+        "current_memory": humanize.naturalsize(current),
+        "peak_memory": humanize.naturalsize(peak),
         "os": "{}, release: {}, version: {}".format(os.uname().sysname, os.uname().release, os.uname().version),
         "start_time": shared_objects.get_start_time(),
         "running_time": shared_objects.get_uptime(),
@@ -104,7 +105,13 @@ def set_system_info(request, gpsp=None):
     shared_objects.save_config()
 
     # update client name and description on server
-    client_api.update_client_name_description(shared_objects.get_websocket(), shared_objects.config["uuid"])
+    uuid = shared_objects.config["uuid"]
+    wsqueue.WebsocketQueueThread.add({
+        "cmd": "update_client_name_description",
+        "uuid": uuid["id"],
+        "name": uuid["name"],
+        "description": uuid["description"],
+    })
 
     return {
         "data": {
@@ -132,6 +139,32 @@ def get_modem_info(request, gpsp=None):
 
 
 @task
+def get_system_status(request, gpsp=None):
+    return {
+        "data": {
+            "data": {**system_utils.get_system_status()},
+            "message": "OK",
+            "status": 0
+        },
+        "message": "OK",
+        "status": 0
+    }
+
+
+@task
+def get_wifi_status(request, gpsp=None):
+    return {
+        "data": {
+            "data": {**system_utils.get_wpa_status()},
+            "message": "OK",
+            "status": 0
+        },
+        "message": "OK",
+        "status": 0
+    }
+
+
+@task
 def get_gps_info(request, gpsp=None):
     return {
         "data": {
@@ -142,3 +175,32 @@ def get_gps_info(request, gpsp=None):
         "message": "OK",
         "status": 0
     }
+    
+
+@task
+def get_config(request, gpsp=None):
+    return {
+        "data": {
+            "config": shared_objects.config,
+            "message": "OK",
+            "status": 0
+        },
+        "message": "OK",
+        "status": 0
+    }
+
+
+@task
+def update_config(request, gpsp=None):
+    shared_objects.config = request["config"]
+    shared_objects.save_config()
+    return {
+        "data": {
+            "config": shared_objects.config,
+            "message": "OK",
+            "status": 0
+        },
+        "message": "OK",
+        "status": 0
+    }
+    

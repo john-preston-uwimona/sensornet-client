@@ -1,33 +1,38 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import shared_objects
+import Adafruit_DHT
 
 
-def get_temperature(dht_device=None):
+def get_temperature(dhtDevicePin=None):
     temperature_c = "None"
-    if dht_device is not None:
-        try:
-            temperature_c = dht_device.temperature
-        except RuntimeError as e:
-            shared_objects.log.error("{}".format(e))
-    print(">>>>>>>>  TEMPERATURE  >>>>>>>>", temperature_c)
+    try:
+        humidity, temperature_c = Adafruit_DHT.read(Adafruit_DHT.DHT22, dhtDevicePin)
+    except RuntimeError as e:
+        shared_objects.log.error("{}".format(e))
+    # print(">>>>>>>>  TEMPERATURE  >>>>>>>>", temperature_c)
+    # get random number to add to timestamp to avoid sensor 
+    # timestamp collision in sensor data database
+    ts = datetime.now() + timedelta(milliseconds=random.randint(0,1000))
     return {
         "value": temperature_c,
         "units": shared_objects.config["sensors"]["temperature"]["units"],
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": ts.isoformat(),
     }
 
 
-def get_humidity(dht_device=None):
+def get_humidity(dhtDevicePin=None):
     humidity = "None"
-    if dht_device is not None:
-        try:
-            humidity = dht_device.humidity
-        except RuntimeError as e:
-            shared_objects.log.error("{}".format(e))
-    print(">>>>>>>>  HUMIDITY  >>>>>>>>", humidity)
+    try:
+        humidity, temperature_c = Adafruit_DHT.read(Adafruit_DHT.DHT22, dhtDevicePin)
+    except RuntimeError as e:
+        shared_objects.log.error("{}".format(e))
+    # print(">>>>>>>>  HUMIDITY  >>>>>>>>", humidity)
+    # get random number to add to timestamp to avoid sensor 
+    # timestamp collision in sensor data database
+    ts = datetime.now() + timedelta(milliseconds=random.randint(0,1000))
     return {
         "value": humidity,
         "units": shared_objects.config["sensors"]["humidity"]["units"],
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": ts.isoformat(),
     }

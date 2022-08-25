@@ -1,14 +1,15 @@
 import serial
 import threading
 import shared_objects
-from datetime import datetime
+import random
+from datetime import datetime, timedelta
 import serial.tools.list_ports
 
 
 class Co2Poller(threading.Thread):
 
-    def __init__(self, config):
-        threading.Thread.__init__(self)
+    def __init__(self, name=None, config={}):
+        threading.Thread.__init__(self, name=name)
         try:
             self.ser = serial.Serial(
                 self.get_port(config["device_parameters"]["location"], config["device_parameters"]["port"]),
@@ -57,9 +58,11 @@ class Co2Poller(threading.Thread):
 def get_co2(co2p):
     co2_value = co2p.get_current_value()
     print("@@@@@@ CO2_VALUE @@@@", co2_value)
-
+    # get random number to add to timestamp to avoid sensor 
+    # timestamp collision in sensor data database
+    ts = datetime.now() + timedelta(milliseconds=random.randint(0,1000))
     return {
         "value": co2_value,
         "units": shared_objects.config["sensors"]["co2"]["units"],
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": ts.isoformat(),
     }

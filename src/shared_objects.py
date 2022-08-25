@@ -3,6 +3,7 @@ import shelve
 import json
 import logging
 import humanize
+import threading
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 
@@ -93,24 +94,27 @@ def init():
     logging.TRACE = 5  # between NOSET and DEBUG
     logging.addLevelName(logging.TRACE, "TRACE")
     logging.Logger.trace = trace
-    log = logging.getLogger('SENSORNET')
+    log = logging.getLogger()
+    # remove all handlers
+    while log.hasHandlers():
+        log.removeHandler(log.handlers[0])
     # set default level
     log.setLevel(get_level_number(config["logger"]["level"]))
-    # create file handler which logs even debug messages
+    # create file handler which logs debug messages
     fh = TimedRotatingFileHandler(os.path.join(config["logger"]["logDirectory"], config["logger"]["logFile"]),
                                   when="midnight")
     # fh = TimedRotatingFileHandler(os.path.join(config["logger"]["logDirectory"], config["logger"]["logFile"]),
     #                               when="D", backupCount=1000)
     # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.TRACE)
+    # ch = logging.StreamHandler()
+    # ch.setLevel(logging.TRACE)
     # create formatter and add it to the handlers
     formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(module)s][%(funcName)s:%(lineno)d] %(message)s')
     fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
+    # ch.setFormatter(formatter)
     # add the handlers to the logger
     log.addHandler(fh)
-    log.addHandler(ch)
+    # log.addHandler(ch)
     log.info("****************************************")
     log.info("*** Started logging with level {} ***".format(logging.getLevelName(log.getEffectiveLevel())))
     log.info("****************************************")
