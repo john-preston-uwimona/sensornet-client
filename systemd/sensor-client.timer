@@ -1,0 +1,8 @@
+[Unit]
+Description=Starts the sensor client pyhton program 90 seconds after the boot process
+
+[Timer]
+OnBootSec=60
+
+[Install]
+WantedBy=timers.target
