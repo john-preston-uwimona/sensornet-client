@@ -5,4 +5,4 @@ lib64
 logs
 pyvenv.cfg
 sync-sourcecode.sh
-.idea
+/update-sourcecode-from-client.sh
